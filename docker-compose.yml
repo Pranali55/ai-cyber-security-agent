@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Cyber@12345"
+    ports:
+      - "1433:1433"
+
+  backend:
+    build: ./backend-dotnet
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=CyberAgentDb;User=sa;Password=Cyber@12345;TrustServerCertificate=True
+      - Jwt__Secret=cyber-agent-dev-secret-key-min-32-chars!!
+      - AgentService__BaseUrl=http://agent:8000
+    depends_on:
+      - db
+      - agent
+
+  agent:
+    build: ./python-agent
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
